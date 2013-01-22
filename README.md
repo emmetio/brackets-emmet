@@ -1,4 +1,4 @@
-# [Emmet](http://emmet.io) plugin for [Brackets](http://brackets.io) #
+# [Emmet](http://emmet.io) plugin for [Brackets](http://brackets.io) editor #
 
 Emmet is a web-developer’s toolkit that can greatly improve your HTML & CSS workflow: http://docs.emmet.io
 

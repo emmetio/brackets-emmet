@@ -3,6 +3,7 @@ define(
 	function(emmet, editorProxy, keymap, snippets) {
 		var r = emmet.require;
 		var _ = r('_');
+		var isEnabled = true;
 		
 		var CommandManager = brackets.getModule('command/CommandManager'),
 			KeyBindingManager = brackets.getModule('command/KeyBindingManager'),
@@ -73,6 +74,10 @@ define(
 		function runAction(action) {
 			var df = new $.Deferred();
 
+			if (!isEnabled) {
+				return df.reject().promise();
+			}
+
 			// a hacky way to avoid action line break action 
 			// execution if code hint popup is visible
 			if (action.name == 'insert_formatted_line_break') {
@@ -130,5 +135,16 @@ define(
 				KeyBindingManager.addBinding(id, shortcut);
 			}
 		});
+
+		// Allow enable and disable Emmet
+		menu.addMenuDivider();
+		var cmdEnable = CommandManager.register('Enable Emmet', 'io.emmet.enabled', function() {
+			this.setChecked(!this.getChecked());
+		});
+		$(cmdEnable).on('checkedStateChange', function() {
+			isEnabled = cmdEnable.getChecked();
+		});
+		menu.addMenuItem(cmdEnable);
+		cmdEnable.setChecked(isEnabled);
 	}
 );

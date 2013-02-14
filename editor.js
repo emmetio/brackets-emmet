@@ -92,7 +92,8 @@ define(['./emmet'], function(emmet) {
                 
             // do a compound change to record all changes into single undo event
             var that = this;
-            this.context.compoundChange(function () {
+            var op = this.context.operation || this.context.compoundChange;
+            op.call(this.context, function() {
                 that.context.replaceRange(value, that.context.posFromIndex(start), that.context.posFromIndex(end));
                 that.createSelection(firstTabStop.start, firstTabStop.end);
             });

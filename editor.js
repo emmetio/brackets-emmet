@@ -4,6 +4,7 @@ define(['./emmet'], function(emmet) {
 	
     var modeMap = {
         "text/html": "html",
+        "htmlmixed": "html",
         "application/xml": "xml",
         "text/xsl": "xsl",
         "text/css": "css",
@@ -103,11 +104,13 @@ define(['./emmet'], function(emmet) {
             return this.context.getValue();
         },
 
-        getSyntax: function () {
+        getCMSyntax: function() {
             var syntax = this.context.getOption("mode");
-            if (syntax in modeMap)
-                syntax = modeMap[syntax];
-            
+            return syntax in modeMap ? modeMap[syntax] : syntax;
+        },
+
+        getSyntax: function () {
+            var syntax = this.getCMSyntax();
             return require('actionUtils').detectSyntax(this, syntax);
         },
 

@@ -90,15 +90,24 @@ define(
 			var editor = EditorManager.getFocusedEditor();
 			if (editor) {
 				editorProxy.setupContext(editor._codeMirror, editor.document.file.fullPath);
-				if (action.name == 'expand_abbreviation_with_tab' && editorProxy.getSelection()) {
-					var extraKeys = editor._codeMirror.getOption('extraKeys');
-					if (extraKeys && extraKeys.Tab) {
-						extraKeys.Tab(editor._codeMirror);
-					} else {
-						_handleTabKey(editor._codeMirror);
+
+				// do not handle Tab key for unknown syntaxes
+				if (action.name == 'expand_abbreviation_with_tab') {
+					var syntax = editorProxy.getCMSyntax();
+					if (!r('resources').hasSyntax(syntax)) {
+						return df.reject().promise();
 					}
-					
-					return df.resolve().promise();
+
+					if (editorProxy.getSelection()) {
+						var extraKeys = editor._codeMirror.getOption('extraKeys');
+						if (extraKeys && extraKeys.Tab) {
+							extraKeys.Tab(editor._codeMirror);
+						} else {
+							_handleTabKey(editor._codeMirror);
+						}
+						
+						return df.resolve().promise();
+					}
 				}
 			}
 	

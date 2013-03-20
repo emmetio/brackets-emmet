@@ -5,6 +5,7 @@ define(['./emmet'], function(emmet) {
     var modeMap = {
         "text/html": "html",
         "htmlmixed": "html",
+        "text/x-brackets-html": "html",
         "application/xml": "xml",
         "text/xsl": "xsl",
         "text/css": "css",

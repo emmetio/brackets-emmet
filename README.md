@@ -4,7 +4,18 @@ Emmet is a web-developer’s toolkit that can greatly improve your HTML & CSS wo
 
 ## Installation ##
 
-Clone this repo into Brackets extensions folder (can be opened by selecting _Help > Show Extensions Folder_ menu item in Brackets) and restart editor. You should see _Emmet_ menu item with all available actions.
+Clone this repo into `~/Library/Application Support/Brackets/extensions/user/` and restart Brackets.
+
+or
+
+1. Run Brackets.
+2. Select _File > Install Extension..._
+3. Enter `https://github.com/emmetio/brackets-emmet/archive/master.zip` as _Extension URL_.
+4. Click _Install_ to begin downloading and installing the extension.
+
+----------------
+
+After the extension installation is completed, you should see _Emmet_ menu item with all available actions.
 
 ## Default keybindings ##
 

@@ -1,7 +1,7 @@
 {
     "expand_abbreviation_with_tab": "Tab",
     
-    "expand_abbreviation": "Ctrl-Enter",
+    "expand_abbreviation": "Ctrl-Alt-Enter",
     "match_pair_outward": "Ctrl-B",
     "match_pair_inward": "Shift-Ctrl-B",
     "matching_pair": "Shift-Ctrl-T",
@@ -12,11 +12,11 @@
     "merge_lines": "Ctrl-Shift-M",
     "toggle_comment": "Ctrl-\\",
     "split_join_tag": "Ctrl-J",
-    "remove_tag": "Ctrl-K",
+    "remove_tag": "Ctrl-Shift-K",
     "evaluate_math_expression": "Shift-Ctrl-Y",
 
-    "increment_number_by_1": "Ctrl-Up",
-    "decrement_number_by_1": "Ctrl-Down",
+    "increment_number_by_1": "Ctrl-Shift-Up",
+    "decrement_number_by_1": "Ctrl-Shift-Down",
     "increment_number_by_01": "Shift-Alt-Up",
     "decrement_number_by_01": "Shift-Alt-Down",
     "increment_number_by_10": "Ctrl-Alt-Up",

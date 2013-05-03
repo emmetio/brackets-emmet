@@ -1,14 +1,17 @@
 define(
-	['emmet', 'editor', 'text!keymap.json', 'text!snippets.json'], 
-	function(emmet, editorProxy, keymap, snippets) {
+	['emmet', 'editor', 'preferences', 'file', 'text!keymap.json', 'text!snippets.json'], 
+	function(emmet, editorProxy, preferences, file, keymap, snippets) {
 		var r = emmet.require;
 		var _ = r('_');
 		var isEnabled = true;
+
+		emmet.define('file', file);
 		
-		var CommandManager = brackets.getModule('command/CommandManager'),
+		var CommandManager    = brackets.getModule('command/CommandManager'),
 			KeyBindingManager = brackets.getModule('command/KeyBindingManager'),
-			Menus = brackets.getModule('command/Menus'),
-			EditorManager = brackets.getModule('editor/EditorManager'),
+			Menus             = brackets.getModule('command/Menus'),
+			EditorManager     = brackets.getModule('editor/EditorManager'),
+			Dialogs           = brackets.getModule("widgets/Dialogs"),
 	
 			skippedActions = ['update_image_size', 'encode_decode_data_url'];
 	
@@ -94,7 +97,7 @@ define(
 				// do not handle Tab key for unknown syntaxes
 				if (action.name == 'expand_abbreviation_with_tab') {
 					var syntax = editorProxy.getCMSyntax();
-					if (!r('resources').hasSyntax(syntax)) {
+					if (!preferences.getPreference('tab') || !r('resources').hasSyntax(syntax)) {
 						return df.reject().promise();
 					}
 
@@ -118,6 +121,30 @@ define(
 			}
 	
 			return df.promise();
+		}
+
+		function loadExtensions() {
+			var extPath = preferences.getPreference('extPath');
+			if (extPath) {
+				var bootstrap = r('bootstrap');
+				bootstrap.resetUserData();
+				brackets.fs.readdir(extPath, function(err, list) {
+					if (err) {
+						return console.error('Unable to read extensions from "%s" folder. Make sure this folder exists and readable.', extPath);
+					}
+
+					console.log('Loading Emmet extensions from', extPath);
+
+					var sep = ~brackets.platform.indexOf('win') ? '\\' : '/';
+					if (extPath.charAt(extPath.length - 1) != sep) {
+						extPath += sep;
+					}
+
+					bootstrap.loadExtensions(list.map(function(f) {
+						return extPath + f;
+					}));
+				});
+			}
 		}
 		
 		// load default snippets
@@ -145,8 +172,9 @@ define(
 			}
 		});
 
-		// Allow enable and disable Emmet
 		menu.addMenuDivider();
+
+		// Allow enable and disable Emmet
 		var cmdEnable = CommandManager.register('Enable Emmet', 'io.emmet.enabled', function() {
 			this.setChecked(!this.getChecked());
 		});
@@ -155,5 +183,17 @@ define(
 		});
 		menu.addMenuItem(cmdEnable);
 		cmdEnable.setChecked(isEnabled);
+
+		// Add Preferences
+		var cmdPreferences = CommandManager.register('Preferences...', 'io.emmet.preferences', function() {
+			preferences.showPreferencesDialog().done(function(id) {
+				if (id === Dialogs.DIALOG_BTN_OK) {
+					loadExtensions();
+				}
+			});
+		});
+		menu.addMenuItem(cmdPreferences);
+
+		loadExtensions();
 	}
 );

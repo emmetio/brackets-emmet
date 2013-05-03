@@ -11,7 +11,7 @@
     "select_line": "Ctrl-Shift-L",
     "merge_lines": "Ctrl-Shift-M",
     "toggle_comment": "Ctrl-\\",
-    "split_join_tag": "Ctrl-J",
+    "split_join_tag": "Ctrl-Shift-J",
     "remove_tag": "Ctrl-Shift-K",
     "evaluate_math_expression": "Shift-Ctrl-Y",
 

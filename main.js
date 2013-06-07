@@ -81,15 +81,6 @@ define(
 				return df.reject().promise();
 			}
 
-			// a hacky way to avoid action line break action 
-			// execution if code hint popup is visible
-			if (action.name == 'insert_formatted_line_break') {
-				var codehint = $('#codehint-menu-bar');
-				if (codehint.length && codehint.find('.codehint-menu.open').length) {
-					return df.reject().promise();
-				}
-			}
-
 			var editor = EditorManager.getFocusedEditor();
 			if (editor) {
 				editorProxy.setupContext(editor._codeMirror, editor.document.file.fullPath);

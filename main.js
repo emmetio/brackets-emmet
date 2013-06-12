@@ -4,6 +4,7 @@ define(
 		var r = emmet.require;
 		var _ = r('_');
 		var isEnabled = true;
+		var lineBreakSyntaxes = {'html': 1, 'xml': 1, 'xsl': 1};
 
 		emmet.define('file', file);
 		
@@ -101,6 +102,13 @@ define(
 						}
 						
 						return df.resolve().promise();
+					}
+				}
+
+				if (action.name == 'insert_formatted_line_break') {
+					// handle Enter key for limited syntaxes only
+					if (!(editorProxy.getCMSyntax() in lineBreakSyntaxes)) {
+						return df.reject().promise();
 					}
 				}
 			}

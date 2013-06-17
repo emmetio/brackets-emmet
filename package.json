@@ -1,0 +1,19 @@
+{
+	"name": "brackets-emmet",
+	"title": "Emmet",
+	"version": "1.0.1",
+	"description": "High-speed HTML and CSS workflow",
+	"homepage": "http://emmet.io",
+	"author": "Sergey Chikuyonok <serge.che@gmail.com> (https://github.com/sergeche)",
+	"license": "MIT",
+	"categories":"editing",
+	"keywords": [
+		"html",
+		"css",
+		"coding",
+		"editing"
+	],
+	"engines": {
+		"brackets": ">=0.22.0"
+	}
+}

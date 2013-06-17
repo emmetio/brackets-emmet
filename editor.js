@@ -9,7 +9,10 @@ define(['./emmet'], function(emmet) {
         "application/xml": "xml",
         "text/xsl": "xsl",
         "text/css": "css",
-        "text/x-less": "less"
+        "text/x-less": "less",
+        "text/x-scss": "scss",
+        "text/x-sass": "sass",
+        "php": "html"
     };
 
     return {

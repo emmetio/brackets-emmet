@@ -2,8 +2,8 @@
     "expand_abbreviation_with_tab": "Tab",
     
     "expand_abbreviation": "Ctrl-Alt-Enter",
-    "match_pair_outward": "Ctrl-B",
-    "match_pair_inward": "Shift-Ctrl-B",
+    "match_pair_outward": "Ctrl-Alt-B",
+    "match_pair_inward": "Shift-Ctrl-Alt-B",
     "matching_pair": "Shift-Ctrl-T",
     "wrap_with_abbreviation": "Shift-Ctrl-A",
     "next_edit_point": "Ctrl-Alt-Right",
@@ -17,8 +17,8 @@
 
     "increment_number_by_1": "Ctrl-Shift-Up",
     "decrement_number_by_1": "Ctrl-Shift-Down",
-    "increment_number_by_01": "Shift-Alt-Up",
-    "decrement_number_by_01": "Shift-Alt-Down",
+    "increment_number_by_01": "Ctrl-Shift-Alt-Up",
+    "decrement_number_by_01": "Ctrl-Shift-Alt-Down",
     "increment_number_by_10": "Ctrl-Alt-Up",
     "decrement_number_by_10": "Ctrl-Alt-Down",
 

@@ -7,7 +7,7 @@ Emmet is a web-developer’s toolkit that can greatly improve your HTML & CSS wo
 ## Installation ##
 
 1. Run Brackets.
-2. Select _File > Install Extension..._
+2. Select _File > Extension Manager..._ and click _Install from URL..._
 3. Enter `https://github.com/emmetio/brackets-emmet` as _Extension URL_.
 4. Click _Install_ to begin downloading and installing the extension.
 

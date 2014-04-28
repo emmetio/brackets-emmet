@@ -1,3 +1,20 @@
+define(function(require, exports, module) {
+	var fs = require('./brackets-fs');
+	var emmet = require('emmet');
+
+	var CommandManager    = require('command/CommandManager');
+	var KeyBindingManager = require('command/KeyBindingManager');
+	var Menus             = require('command/Menus');
+	var EditorManager     = require('editor/EditorManager');
+	var Dialogs           = require('widgets/Dialogs');
+
+	var skippedActions = ['update_image_size', 'encode_decode_data_url'];
+	var isEnabled = true;
+	var lineBreakSyntaxes = {'html': 1, 'xml': 1, 'xsl': 1};
+});
+
+
+
 define(
 	['emmet', 'editor', 'preferences', 'file', 'text!keymap.json', 'text!snippets.json'], 
 	function(emmet, editorProxy, preferences, file, keymap, snippets) {

@@ -1,8 +1,9 @@
 define(function(require, exports, module) {
 	var fs = require('./brackets-fs');
 	var preferences = require('./preferences');
-	var editor = require('./editor');
-	var path = require('./path');
+	var editor      = require('./editor');
+	var path        = require('./path');
+	var prompt      = require('./prompt');
 
 	var emmet     = require('emmet/emmet');
 	var resources = require('emmet/assets/resources');
@@ -17,6 +18,8 @@ define(function(require, exports, module) {
 	var EditorManager     = brackets.getModule('editor/EditorManager');
 	var Dialogs           = brackets.getModule('widgets/Dialogs');
 	var FileSystem        = brackets.getModule('filesystem/FileSystem');
+	var ExtensionUtils    = brackets.getModule('utils/ExtensionUtils');
+	var AppInit           = brackets.getModule('utils/AppInit');
 
 	var skippedActions = ['update_image_size', 'encode_decode_data_url'];
 	// actions that should be performed in single selection mode
@@ -189,6 +192,14 @@ define(function(require, exports, module) {
 
 		menu.addMenuDivider();
 
+		// debug panel
+		CommandManager.register('Show Emmet panel', 'io.emmet.show_panel', function() {
+			prompt.show({
+				editor: EditorManager.getFocusedEditor()
+			});
+		});
+		KeyBindingManager.addBinding('io.emmet.show_panel', 'Alt-F1');
+
 		// Allow enable and disable Emmet
 		var cmdEnable = CommandManager.register('Enable Emmet', 'io.emmet.enabled', function() {
 			this.setChecked(!this.getChecked());
@@ -210,5 +221,8 @@ define(function(require, exports, module) {
 		menu.addMenuItem(cmdPreferences);
 	}
 
-	loadExtensions(init);
+	AppInit.appReady(function() {
+		ExtensionUtils.loadStyleSheet(module, 'ui/style.css');
+		loadExtensions(init);
+	});
 });

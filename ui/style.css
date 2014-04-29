@@ -1,0 +1,26 @@
+.emmet-prompt {
+	display: -webkit-flex;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px;
+	border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.emmet-prompt .emmet-prompt__label {
+	display: inline-block;
+	white-space: nowrap;
+	min-width: -webkit-min-content;
+	min-width: min-content;
+	padding-right: 10px;
+	margin: 0;
+}
+
+.emmet-prompt .emmet-prompt__input {
+	flex: 1 100%;
+	margin: 0;
+}
+
+.emmet-prompt .vert-resizer {
+	display: none;
+}

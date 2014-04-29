@@ -5,7 +5,7 @@ define(function (require, exports, module) {
 		PreferencesManager     = brackets.getModule("preferences/PreferencesManager"),
 		ProjectManager         = brackets.getModule("project/ProjectManager"),
 		Strings                = brackets.getModule("strings"),
-		PrefsTemplate          = require("text!preferences.html");
+		PrefsTemplate          = require("text!ui/preferences.html");
 
 
 	var preferenceKeyId = 'io.emmet.preferences';

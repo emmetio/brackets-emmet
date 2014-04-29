@@ -1,10 +1,14 @@
-define(['./path', 'filesystem/FileSystem', 'emmet/plugin/file'], function(path, fs, emmetFile) {
+define(function(require, exports, module) {
+	var path = require('./path');
+	var emmetFile = require('emmet/plugin/file');
+	var FileSystem = brackets.getModule('filesystem/FileSystem');
+
 	emmetFile({
 		_exists: function(file) {
 			
 		},
 		read: function(file, size, callback) {
-			var fd = fs.getFileForPath(file);
+			var fd = FileSystem.getFileForPath(file);
 			if (!fd) {
 				return callback('File "' + path + '" does not exists.');
 			}
@@ -22,7 +26,7 @@ define(['./path', 'filesystem/FileSystem', 'emmet/plugin/file'], function(path, 
 			while (dirname && dirname !== path.dirname(dirname)) {
 				dirname = path.dirname(dirname);
 				f = path.join(dirname, fileName);
-				if (fs.getFileForPath(f)) {
+				if (FileSystem.getFileForPath(f)) {
 					return f;
 				}
 			}
@@ -31,7 +35,7 @@ define(['./path', 'filesystem/FileSystem', 'emmet/plugin/file'], function(path, 
 		},
 
 		createPath: function(parent, fileName, callback) {
-			fs.getFileForPath(parent).exists(function(err, exists) {
+			FileSystem.getFileForPath(parent).exists(function(err, exists) {
 				if (exists) {
 					parent = path.dirname(parent);
 				}
@@ -41,7 +45,7 @@ define(['./path', 'filesystem/FileSystem', 'emmet/plugin/file'], function(path, 
 		},
 
 		save: function(file, content) {
-			fs.getFileForPath(file).write(content, {encoding: 'ascii'});
+			FileSystem.getFileForPath(file).write(content, {encoding: 'ascii'});
 		}
 	});
 

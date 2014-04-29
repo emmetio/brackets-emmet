@@ -1,0 +1,6 @@
+{
+	"paths": {
+		"lodash": "./node_modules/emmet/node_modules/lodash/lodash",
+		"emmet": "./node_modules/emmet/lib"
+	}
+}

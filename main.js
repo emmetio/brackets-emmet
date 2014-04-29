@@ -1,185 +1,184 @@
 define(function(require, exports, module) {
 	var fs = require('./brackets-fs');
-	var emmet = require('emmet');
+	var preferences = require('./preferences');
+	var editor = require('./editor');
+	var path = require('./path');
 
-	var CommandManager    = require('command/CommandManager');
-	var KeyBindingManager = require('command/KeyBindingManager');
-	var Menus             = require('command/Menus');
-	var EditorManager     = require('editor/EditorManager');
-	var Dialogs           = require('widgets/Dialogs');
+	var emmet     = require('emmet/emmet');
+	var resources = require('emmet/assets/resources');
+	var actions   = require('emmet/action/main');
+	var keymap    = require('text!keymap.json');
+	var snippets  = require('text!emmet/snippets.json');
+	var ciu       = require('text!emmet/caniuse.json');
+
+	var CommandManager    = brackets.getModule('command/CommandManager');
+	var KeyBindingManager = brackets.getModule('command/KeyBindingManager');
+	var Menus             = brackets.getModule('command/Menus');
+	var EditorManager     = brackets.getModule('editor/EditorManager');
+	var Dialogs           = brackets.getModule('widgets/Dialogs');
+	var FileSystem        = brackets.getModule('filesystem/FileSystem');
 
 	var skippedActions = ['update_image_size', 'encode_decode_data_url'];
+	// actions that should be performed in single selection mode
+	var singleSelectionActions = [
+		'prev_edit_point', 'next_edit_point', 'merge_lines',
+		'reflect_css_value', 'select_next_item', 'select_previous_item',
+		'wrap_with_abbreviation', 'update_tag', 'insert_formatted_line_break_only'
+	];
 	var isEnabled = true;
-	var lineBreakSyntaxes = {'html': 1, 'xml': 1, 'xsl': 1};
-});
+	var lineBreakSyntaxes = ['html', 'xml', 'xsl'];
 
-
-
-define(
-	['emmet', 'editor', 'preferences', 'file', 'text!keymap.json', 'text!snippets.json'], 
-	function(emmet, editorProxy, preferences, file, keymap, snippets) {
-		var r = emmet.require;
-		var _ = r('_');
-		var isEnabled = true;
-		var lineBreakSyntaxes = {'html': 1, 'xml': 1, 'xsl': 1};
-
-		emmet.define('file', file);
-		
-		var CommandManager    = brackets.getModule('command/CommandManager'),
-			KeyBindingManager = brackets.getModule('command/KeyBindingManager'),
-			Menus             = brackets.getModule('command/Menus'),
-			EditorManager     = brackets.getModule('editor/EditorManager'),
-			Dialogs           = brackets.getModule("widgets/Dialogs"),
-	
-			skippedActions = ['update_image_size', 'encode_decode_data_url'];
-	
-	
-		 /**
-		  * The following function included from Brackets to handle Tab key
-		  * when abbreviation cannot be expanded (https://github.com/adobe/brackets/blob/master/LICENSE).
-		  * @private
-		  * Handle Tab key press.
-		  * @param {!CodeMirror} instance CodeMirror instance.
-		  */
-		function _handleTabKey(instance) {
-			// Tab key handling is done as follows:
-			// 1. If the selection is before any text and the indentation is to the left of
-			//    the proper indentation then indent it to the proper place. Otherwise,
-			//    add another tab. In either case, move the insertion point to the
-			//    beginning of the text.
-			// 2. If the selection is after the first non-space character, and is not an
-			//    insertion point, indent the entire line(s).
-			// 3. If the selection is after the first non-space character, and is an
-			//    insertion point, insert a tab character or the appropriate number
-			//    of spaces to pad to the nearest tab boundary.
-			var from = instance.getCursor(true),
-				to = instance.getCursor(false),
-				line = instance.getLine(from.line),
-				indentAuto = false,
-				insertTab = false;
-	
-			if (from.line === to.line) {
-				if (line.search(/\S/) > to.ch || to.ch === 0) {
-					indentAuto = true;
-				}
-			}
-	
-			if (indentAuto) {
-				var currentLength = line.length;
-				CodeMirror.commands.indentAuto(instance);
-				// If the amount of whitespace didn't change, insert another tab
-				if (instance.getLine(from.line).length === currentLength) {
-						insertTab = true;
-						to.ch = 0;
-				}
-			} else if (instance.somethingSelected()) {
-				CodeMirror.commands.indentMore(instance);
-			} else {
-				insertTab = true;
-			}
-	
-			if (insertTab) {
-				if (instance.getOption("indentWithTabs")) {
-						CodeMirror.commands.insertTab(instance);
-				} else {
-					var i, ins = "", numSpaces = _indentUnit;
-					numSpaces -= to.ch % numSpaces;
-					for (i = 0; i < numSpaces; i++) {
-						ins += " ";
-					}
-					instance.replaceSelection(ins, "end");
-				}
-			}
-		}
-	
-		function runAction(action) {
+	/**
+	 * Emmet action decorator: creates a command function
+	 * for CodeMirror and executes Emmet action as single
+	 * undo command
+	 * @param  {Object} action Action to perform
+	 * @return {Function}
+	 */
+	function actionDecorator(action) {
+		return function() {
 			var df = new $.Deferred();
-
-			if (!isEnabled) {
-				return df.reject().promise();
+			var bracketsEditor = EditorManager.getFocusedEditor();
+			if (!bracketsEditor) {
+				return df.reject();
 			}
 
-			var editor = EditorManager.getFocusedEditor();
-			if (editor) {
-				editorProxy.setupContext(editor._codeMirror, editor.document.file.fullPath);
+			editor.setup(bracketsEditor);
+			bracketsEditor.document.batchOperation(function() {
+				runAction(action, df);
+			});
 
-				// do not handle Tab key for unknown syntaxes
-				if (action.name == 'expand_abbreviation_with_tab') {
-					var syntax = editorProxy.getCMSyntax();
-					if (!preferences.getPreference('tab') || !r('resources').hasSyntax(syntax)) {
-						return df.reject().promise();
-					}
+			return df.resolve().promise();
+		};
+	}
 
-					if (editorProxy.getSelection()) {
-						var extraKeys = editor._codeMirror.getOption('extraKeys');
-						if (extraKeys && extraKeys.Tab) {
-							extraKeys.Tab(editor._codeMirror);
-						} else {
-							_handleTabKey(editor._codeMirror);
+	/**
+	 * Same as `actionDecorator()` but executes action
+	 * with multiple selections
+	 * @param  {Object} action Action to perform
+	 * @return {Function}
+	 */
+	function multiSelectionActionDecorator(action) {
+		return function() {
+			var df = new $.Deferred();
+			var bracketsEditor = EditorManager.getFocusedEditor();
+			if (!bracketsEditor) {
+				return df.reject();
+			}
+
+			editor.setup(bracketsEditor);
+			bracketsEditor.document.batchOperation(function() {
+				var selections = editor.selectionList();
+				for (var i = 0, il = selections.length; i < il; i++) {
+					editor.selectionIndex = i;
+					runAction(action, df);
+				}
+			});
+			return df.resolve().promise();
+		};
+	}
+
+
+	function runAction(action, df) {
+		if (!isEnabled) {
+			return df.reject().promise();
+		}
+
+		// do not handle Tab key for unknown syntaxes
+		if (action == 'expand_abbreviation_with_tab') {
+			var syntax = editor.getSyntax();
+			var activeEditor = editor.editor;
+			if (!preferences.getPreference('tab') || !resources.hasSyntax(syntax)) {
+				return df.reject();
+			}
+
+			// do not expand abbreviation if there’s a selection
+			if (activeEditor.hasSelection()) {
+				if (activeEditor._handleTabKey) {
+					activeEditor._handleTabKey();
+				}
+				return df.resolve();
+			}
+		}
+
+		if (action == 'insert_formatted_line_break' && lineBreakSyntaxes.indexOf(editor.getSyntax()) === -1) {
+			// handle Enter key for limited syntaxes only
+			return df.reject();
+		}
+
+		return emmet.run(action, editor);
+	}
+
+	function loadExtensions(callback) {
+		var extPath = preferences.getPreference('extPath');
+		if (extPath) {
+			var dir = FileSystem.getDirectoryForPath(extPat);
+			dir.exists(function(err, exists) {
+				if (exists) {
+					emmet.resetUserData();
+					dir.getContents(function(err, files) {
+						if (err) {
+							return callback(err);
 						}
-						
-						return df.resolve().promise();
-					}
-				}
 
-				if (action.name == 'insert_formatted_line_break') {
-					// handle Enter key for limited syntaxes only
-					if (!(editorProxy.getCMSyntax() in lineBreakSyntaxes)) {
-						return df.reject().promise();
-					}
+						var complete = function() {
+							emmet.loadExtensions(files);
+							callback();
+						};
+
+						var waitForKeymap = false;
+
+						// if extensions path contains keymap file —
+						// use it as current Emmet keymap
+						files.map(function(file) {
+							if (path.basename(file.fullPath) == 'keymap.json') {
+								waitForKeymap = true;
+								file.read({encoding: 'utf8'}, function(content) {
+									keymap = content;
+									complete();
+								});
+							}
+
+							return file.fullPath;
+						});
+
+						if (!waitForKeymap) {
+							complete();
+						}
+					});
 				}
+			});
+		} else {
+			callback();
+		}
+	}
+
+	function init() {
+		try {
+			if (typeof keymap == 'string') {
+				keymap = JSON.parse(keymap);
 			}
-	
-			if (editor && r("actions").run(action.name, editorProxy)) {
-				df.resolve();
-			} else {
-				df.reject();
-			}
-	
-			return df.promise();
+		} catch(e) {
+			console.error(e);
 		}
 
-		function loadExtensions() {
-			var extPath = preferences.getPreference('extPath');
-			if (extPath) {
-				var bootstrap = r('bootstrap');
-				bootstrap.resetUserData();
-				brackets.fs.readdir(extPath, function(err, list) {
-					if (err) {
-						return console.error('Unable to read extensions from "%s" folder. Make sure this folder exists and readable.', extPath);
-					}
-
-					console.log('Loading Emmet extensions from', extPath);
-
-					var sep = ~brackets.platform.indexOf('win') ? '\\' : '/';
-					if (extPath.charAt(extPath.length - 1) != sep) {
-						extPath += sep;
-					}
-
-					bootstrap.loadExtensions(list.map(function(f) {
-						return extPath + f;
-					}));
-				});
-			}
-		}
-		
-		// load default snippets
-		r('resources').setVocabulary(JSON.parse(snippets), 'system');
+		emmet.loadSystemSnippets(snippets);
+		emmet.loadCIU(ciu);
 
 		// register all commands
-		var menu = Menus.addMenu("Emmet", "io.emmet.EmmetMainMenu");
-		keymap = JSON.parse(keymap);
-
-		r("actions").getList().forEach(function(action) {
-			if (_.include(skippedActions, action.name))
+		var menu = Menus.addMenu('Emmet', 'io.emmet.EmmetMainMenu');
+		actions.getList().forEach(function(action) {
+			if (~skippedActions.indexOf(action)) {
 				return;
+			}
 
-			var id = "io.emmet." + action.name;
+			var id = 'io.emmet.' + action.name;
 			var shortcut = keymap[action.name];
+			var cmd = ~singleSelectionActions.indexOf(action.name) 
+				? actionDecorator(action.name)
+				: multiSelectionActionDecorator(action.name);
 
-			CommandManager.register(action.options.label, id, function() {
-				return runAction(action);
-			});
+			CommandManager.register(action.options.label, id, cmd);
 
 			if (!action.options.hidden) {
 				menu.addMenuItem(id, shortcut);
@@ -209,7 +208,7 @@ define(
 			});
 		});
 		menu.addMenuItem(cmdPreferences);
-
-		loadExtensions();
 	}
-);
+
+	loadExtensions(init);
+});

@@ -1,0 +1,23 @@
+{
+	"folders":
+	[
+		{
+			"folder_exclude_patterns":
+			[
+				"node_modules"
+			],
+			"follow_symlinks": true,
+			"path": "."
+		}
+	],
+	 "ternjs": {
+        "exclude": ["node_modules/**"],
+        "libs": ["browser"],
+        "plugins": {
+            "requirejs": {
+                "baseURL": "./"
+            }
+        }
+
+    }
+}

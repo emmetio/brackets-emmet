@@ -4,6 +4,7 @@ define(function(require, exports, module) {
 	var editor      = require('./editor');
 	var path        = require('./path');
 	var prompt      = require('./prompt');
+	var interactive = require('./interactive');
 
 	var emmet     = require('emmet/emmet');
 	var resources = require('emmet/assets/resources');
@@ -115,7 +116,7 @@ define(function(require, exports, module) {
 	function loadExtensions(callback) {
 		var extPath = preferences.getPreference('extPath');
 		if (extPath) {
-			var dir = FileSystem.getDirectoryForPath(extPat);
+			var dir = FileSystem.getDirectoryForPath(extPath);
 			dir.exists(function(err, exists) {
 				if (exists) {
 					emmet.resetUserData();
@@ -123,6 +124,10 @@ define(function(require, exports, module) {
 						if (err) {
 							return callback(err);
 						}
+
+						files = files.filter(function(entry) {
+							return !entry.isDirectory;
+						});
 
 						var complete = function() {
 							emmet.loadExtensions(files);
@@ -133,7 +138,7 @@ define(function(require, exports, module) {
 
 						// if extensions path contains keymap file —
 						// use it as current Emmet keymap
-						files.map(function(file) {
+						files = files.map(function(file) {
 							if (path.basename(file.fullPath) == 'keymap.json') {
 								waitForKeymap = true;
 								file.read({encoding: 'utf8'}, function(content) {
@@ -194,9 +199,8 @@ define(function(require, exports, module) {
 
 		// debug panel
 		CommandManager.register('Show Emmet panel', 'io.emmet.show_panel', function() {
-			prompt.show({
-				editor: EditorManager.getFocusedEditor()
-			});
+			editor.setup(EditorManager.getFocusedEditor());
+			interactive.updateTag(editor);
 		});
 		KeyBindingManager.addBinding('io.emmet.show_panel', 'Alt-F1');
 

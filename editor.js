@@ -156,6 +156,7 @@ define(function(require, exports, module) {
 
 			this.editor.document.replaceRange(value, this._posFromIndex(start), this._posFromIndex(end));
 			this.createSelection(firstTabStop.start, firstTabStop.end);
+			return value;
 		},
 
 		getSyntax: function() {

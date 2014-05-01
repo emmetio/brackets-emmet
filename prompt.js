@@ -74,7 +74,6 @@ define(function(require, exports, module) {
 
 			$panel
 				.on('update.emmet', function(evt, value) {
-					console.log('update', value);
 					updated = true;
 					delegate.editor.undo();
 					delegate.editor.document.batchOperation(function() {
@@ -82,13 +81,13 @@ define(function(require, exports, module) {
 					});
 				})
 				.on('confirm.emmet', function(evt, value) {
-					console.log('confirm', evt);
+					method(delegate, 'confirm')();
 				})
 				.on('cancel.emmet', function(evt) {
-					console.log('cancel', evt);
 					if (updated) {
 						delegate.editor.undo();
 					}
+					method(delegate, 'cancel')();
 				});
 
 			input.focus();
@@ -97,6 +96,7 @@ define(function(require, exports, module) {
 
 			if (input.val()) {
 				update(input.val());
+				updated = true;
 			}
 		},
 

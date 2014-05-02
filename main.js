@@ -6,12 +6,12 @@ define(function(require, exports, module) {
 	var prompt      = require('./prompt');
 	var interactive = require('./interactive');
 
-	var emmet     = require('emmet/emmet');
-	var resources = require('emmet/assets/resources');
-	var actions   = require('emmet/action/main');
-	var keymap    = require('text!keymap.json');
-	var snippets  = require('text!emmet/snippets.json');
-	var ciu       = require('text!emmet/caniuse.json');
+	var emmet       = require('emmet/emmet');
+	var resources   = require('emmet/assets/resources');
+	var actions     = require('emmet/action/main');
+	var keymap      = require('text!keymap.json');
+	var snippets    = require('text!emmet/snippets.json');
+	var ciu         = require('text!emmet/caniuse.json');
 
 	var CommandManager    = brackets.getModule('command/CommandManager');
 	var KeyBindingManager = brackets.getModule('command/KeyBindingManager');
@@ -161,6 +161,31 @@ define(function(require, exports, module) {
 		}
 	}
 
+	/**
+	 * Register special, interactive versions of some Emmet actions
+	 */
+	function registerInteractiveCommands(menu) {
+		['wrap_with_abbreviation', 'update_tag', 'interactive_expand_abbreviation'].forEach(function(cmd) {
+			var action = actions.get(cmd);
+			CommandManager.register(actionLabel(action, cmd), 'io.emmet.' + cmd, function() {
+				editor.setup(EditorManager.getFocusedEditor());
+				interactive.run(cmd, editor);
+			});
+		});
+
+		menu.addMenuItem('io.emmet.interactive_expand_abbreviation', 'Alt-Enter');
+	}
+
+	function actionLabel(action, fallback) {
+		if (action && action.options.label) {
+			return action.options.label.split('/').pop().replace(/\\/g, '/');
+		}
+
+		return fallback.replace(/^[a-z]|_([a-z])/g, function(str, ch) {
+			return str.toUpperCase().replace('_', ' ');
+		});
+	}
+
 	function init() {
 		try {
 			if (typeof keymap == 'string') {
@@ -173,21 +198,27 @@ define(function(require, exports, module) {
 		emmet.loadSystemSnippets(snippets);
 		emmet.loadCIU(ciu);
 
-		// register all commands
 		var menu = Menus.addMenu('Emmet', 'io.emmet.EmmetMainMenu');
+		registerInteractiveCommands(menu);
+
+		// register all commands
 		actions.getList().forEach(function(action) {
-			if (~skippedActions.indexOf(action)) {
+			if (~skippedActions.indexOf(action.name)) {
 				return;
 			}
 
 			var id = 'io.emmet.' + action.name;
+			
+			if (!CommandManager.get(id)) {
+				// regiester new command only if wasn’t defined previously
+				var cmd = ~singleSelectionActions.indexOf(action.name) 
+					? actionDecorator(action.name)
+					: multiSelectionActionDecorator(action.name);
+
+				CommandManager.register(actionLabel(action), id, cmd);
+			}
+
 			var shortcut = keymap[action.name];
-			var cmd = ~singleSelectionActions.indexOf(action.name) 
-				? actionDecorator(action.name)
-				: multiSelectionActionDecorator(action.name);
-
-			CommandManager.register(action.options.label, id, cmd);
-
 			if (!action.options.hidden) {
 				menu.addMenuItem(id, shortcut);
 			} else if (shortcut) {
@@ -196,13 +227,6 @@ define(function(require, exports, module) {
 		});
 
 		menu.addMenuDivider();
-
-		// debug panel
-		CommandManager.register('Show Emmet panel', 'io.emmet.show_panel', function() {
-			editor.setup(EditorManager.getFocusedEditor());
-			interactive.updateTag(editor);
-		});
-		KeyBindingManager.addBinding('io.emmet.show_panel', 'Alt-F1');
 
 		// Allow enable and disable Emmet
 		var cmdEnable = CommandManager.register('Enable Emmet', 'io.emmet.enabled', function() {

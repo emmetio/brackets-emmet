@@ -82,12 +82,14 @@ define(function(require, exports, module) {
 				})
 				.on('confirm.emmet', function(evt, value) {
 					method(delegate, 'confirm')();
+					delegate.editor.focus();
 				})
 				.on('cancel.emmet', function(evt) {
 					if (updated) {
 						delegate.editor.undo();
 					}
 					method(delegate, 'cancel')();
+					delegate.editor.focus();
 				});
 
 			input.focus();

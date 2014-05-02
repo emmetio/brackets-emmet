@@ -17,6 +17,6 @@
     "brackets": ">=0.38.0"
   },
   "dependencies": {
-    "emmet": "^1.1.2"
+    "emmet": "^1.1.3"
   }
 }

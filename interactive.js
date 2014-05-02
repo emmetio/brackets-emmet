@@ -70,13 +70,43 @@ define(function(require, exports, module) {
 				editor.setCaretPos(selCtx[i].caret);
 			}
 		}
-		editor.editor.focus();
 	}
 
 	return {
-		wrapWithAbbreviation: function(editor) {
-			// first we have to cache context for each selection
-			var selCtx = selectionContext(editor);
+		run: function(cmd, editor) {
+			if (cmd === 'wrap_with_abbreviation') {
+				return this.wrapWithAbbreviation(editor);
+			}
+
+			if (cmd === 'update_tag') {
+				return this.updateTag(editor);
+			}
+
+			if (cmd === 'interactive_expand_abbreviation') {
+				return this.expandAbbreviation(editor);
+			}
+		},
+
+		expandAbbreviation: function(editor) {
+			var info = editorUtils.outputInfo(editor);
+			var selCtx = editor.selectionList().map(function(sel, i) {
+				editor.selectionIndex = i;
+				var r = range(editor.getSelectionRange());
+				return {
+					selection: r,
+					caret: r.start,
+					syntax: info.syntax,
+					profile: info.profile || null,
+					counter: editor.selectionIndex + 1,
+					contextNode: actionUtils.captureContext(editor, r.start)
+				};
+			});
+
+			return this.wrapWithAbbreviation(editor, selCtx);
+		},
+
+		wrapWithAbbreviation: function(editor, selCtx) {
+			selCtx = selCtx || selectionContext(editor);
 
 			// show prompt dialog that will wrap each selection
 			// on user typing

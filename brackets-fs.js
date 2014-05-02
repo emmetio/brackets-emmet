@@ -4,10 +4,7 @@ define(function(require, exports, module) {
 	var FileSystem = brackets.getModule('filesystem/FileSystem');
 
 	emmetFile({
-		_exists: function(file) {
-			
-		},
-		read: function(file, size, callback) {
+		read: function(file, callback) {
 			var fd = FileSystem.getFileForPath(file);
 			if (!fd) {
 				return callback('File "' + path + '" does not exists.');
@@ -16,8 +13,8 @@ define(function(require, exports, module) {
 			fd.read({encoding: 'utf8'}, callback);
 		},
 
-		readText: function(file, size, callback) {
-			return this.read(file, size, callback);
+		readText: function(file, callback) {
+			return this.read(file, callback);
 		},
 
 		locateFile: function(editorFile, fileName) {

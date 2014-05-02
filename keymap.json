@@ -14,6 +14,7 @@
     "split_join_tag": "Ctrl-Shift-J",
     "remove_tag": "Ctrl-Shift-K",
     "evaluate_math_expression": "Shift-Ctrl-Y",
+    "update_tag": "Shift-Ctrl-I",
 
     "increment_number_by_1": "Ctrl-Shift-Up",
     "decrement_number_by_1": "Ctrl-Shift-Down",

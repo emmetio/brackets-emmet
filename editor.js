@@ -38,7 +38,6 @@ define(function(require, exports, module) {
 
 	return {
 		editor: null,
-		selectionIndex: 0,
 		modeMap: {
 			'text/html': 'html',
 			'application/xml': 'xml',
@@ -51,7 +50,54 @@ define(function(require, exports, module) {
 
 		setup: function(editor, selIndex) {
 			this.editor = editor;
-			this.selectionIndex = selIndex || 0;
+			var bufRanges = editor.getSelections();
+			this._selection = {
+				index: 0,
+				saved: new Array(bufRanges),
+				bufferRanges: bufRanges,
+				indexRanges: bufRanges.map(function(r) {
+					return {
+						start: editor.indexFromPos(r.start),
+						end:   editor.indexFromPos(r.end)
+					};
+				})
+
+			};
+		},
+
+		/**
+		 * Executes given function for every selection
+		 * @param  {Function} fn
+		 */
+		exec: function(fn) {
+			var sel = this._selection;
+			var ix = sel.bufferRanges.length - 1;
+			var success = true;
+			sel.saved = new Array(sel.bufferRanges.length);
+			while (ix >= 0) {
+				sel.index = ix;
+				if (fn(sel.index) === false) {
+					success = false;
+					break;
+				}
+			}
+
+			if (success && sel.saved.length > 1) {
+				this.editor.setSelections(sel.saved);
+			}
+		},
+
+		_saveSelection: function(delta) {
+			var sel = this._selection;
+			sel.saved[sel.index] = this.editor.getSelection();
+			if (delta) {
+				var i = sel.index, r;
+				while (++i < sel.saved.length) {
+					r = sel.saved[i];
+					r.start.line += delta;
+					r.end.line += delta;
+				}
+			}
 		},
 
 		_convertRange: function(sel) {
@@ -59,11 +105,6 @@ define(function(require, exports, module) {
 				start: this.editor.indexFromPos(sel.start),
 				end: this.editor.indexFromPos(sel.end)
 			};
-		},
-
-		_currentLineRange: function() {
-			var sel = this.editor.getSelections()[this.selectionIndex];
-			return this.editor.convertToLineSelections([sel])[0].selectionForEdit;
 		},
 
 		_posFromIndex: function(index) {
@@ -77,7 +118,7 @@ define(function(require, exports, module) {
 		 * @return {Array}
 		 */
 		selectionList: function() {
-			return this.editor.getSelections().map(this._convertRange, this);
+			return this._selection.indexRanges;
 		},
 
 		getCaretPos: function() {
@@ -93,14 +134,20 @@ define(function(require, exports, module) {
 		 * @return {Object}
 		 */
 		getSelectionRange: function() {
-			return this.selectionList()[this.selectionIndex];
+			var sel = this._selection;
+			return sel.indexRanges[sel.index];
+		},
+
+		getSelectionBufferRange: function() {
+			var sel = this._selection;
+			return sel.bufferRanges[sel.index];
 		},
 
 		createSelection: function(start, end) {
 			end = end || start;
 
-			var sels = this.editor.getSelections();
-			sels[this.selectionIndex] = {
+			var sels = this._selection.bufferRanges;
+			sels[this._selection.index] = {
 				start: this._posFromIndex(start), 
 				end: this._posFromIndex(end)
 			};
@@ -112,8 +159,13 @@ define(function(require, exports, module) {
 		 * @return {String}
 		 */
 		getSelection: function() {
-			var sel = this.editor.getSelections()[this.selectionIndex];
+			var sel = this.getSelectionBufferRange();
 			return this.editor.document.getRange(sel.start, sel.end);
+		},
+
+		_currentLineRange: function() {
+			var sel = this.getSelectionBufferRange();
+			return this.editor.convertToLineSelections([sel])[0].selectionForEdit;
 		},
 
 		getCurrentLineRange: function() {
@@ -154,8 +206,15 @@ define(function(require, exports, module) {
 			firstTabStop.start += start;
 			firstTabStop.end += start;
 
-			this.editor.document.replaceRange(value, this._posFromIndex(start), this._posFromIndex(end));
+			var doc = this.editor.document;
+			start = this._posFromIndex(start);
+			end = this._posFromIndex(end);
+
+			var oldValue = doc.getRange(start, end);
+
+			doc.replaceRange(value, start, end);
 			this.createSelection(firstTabStop.start, firstTabStop.end);
+			this._saveSelection(utils.splitByLines(value).length - utils.splitByLines(oldValue).length);
 			return value;
 		},
 

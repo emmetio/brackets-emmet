@@ -5,12 +5,12 @@
 define(function(require, exports, module) {
 	var panelHtml = require('text!ui/panel.html');
 
-	var PanelManager      = brackets.getModule('view/PanelManager');
-	var ExtensionUtils    = brackets.getModule('utils/ExtensionUtils');
-	var AppInit           = brackets.getModule('utils/AppInit');
+	var PanelManager   = brackets.getModule('view/PanelManager');
+	var ExtensionUtils = brackets.getModule('utils/ExtensionUtils');
+	var AppInit        = brackets.getModule('utils/AppInit');
+	var KeyEvent       = brackets.getModule('utils/KeyEvent');
+	var EditorManager  = brackets.getModule('editor/EditorManager');
 
-	var ENTER_KEY = 13;
-	var ESC_KEY = 27;
 	var $panel = $(panelHtml);
 	var panel = null;
 
@@ -35,22 +35,29 @@ define(function(require, exports, module) {
 		// register keyboard handlers
 		$panel.find('.emmet-prompt__input')
 			.on('keyup', function(evt) {
-				if (evt.keyCode === ENTER_KEY) {
+				if (evt.keyCode === KeyEvent.DOM_VK_ENTER) {
 					$panel.triggerHandler('confirm.emmet', [this.value]);
 					hidePanel();
 					return evt.preventDefault();
 				}
 
-				if (evt.keyCode === ESC_KEY) {
+				if (evt.keyCode === KeyEvent.DOM_VK_ESCAPE) {
 					$panel.triggerHandler('cancel.emmet');
 					hidePanel();
 					return evt.preventDefault();
 				}
 			})
+			.on('blur cancel', function() {
+				setTimeout(function() {
+					if (panel.isVisible()) {
+						$panel.triggerHandler('cancel.emmet');
+						hidePanel();
+					}
+				}, 10);
+			})
 			.on('input', function() {
 				$panel.triggerHandler('update.emmet', [this.value]);
 			});
-		
 	});
 
 	return {
@@ -69,6 +76,9 @@ define(function(require, exports, module) {
 
 			var update = method(delegate, 'update');
 			var updated = false;
+			if (!EditorManager.getFocusedEditor()) {
+				EditorManager.focusEditor();
+			}
 			
 			panel.show();
 

@@ -51,6 +51,42 @@ define(function(require, exports, module) {
 		});
 	}
 
+	function updateFinalCarets(selCtx, fromIndex, delta) {
+		if (!delta) {
+			return;
+		}
+
+		for (var i = fromIndex + 1, il = selCtx.length; i < il; i++) {
+			selCtx[i].finalCaret.line += delta;
+		}
+	}
+
+	/**
+	 * Returns current caret position for given editor
+	 * @param  {Editor} editor Atom editor instance
+	 * @return {Point}        Character position in editor
+	 */
+	function getCaret(editor) {
+		// make sure we’re taking first caret
+		return editor.getSelections()[0].start;
+	}
+
+	function lineDelta(prev, cur) {
+		return utils.splitByLines(cur).length - utils.splitByLines(prev).length;
+	}
+
+	function setFinalCarets(selCtx, editor) {
+		if (selCtx && selCtx.length > 1) {
+			editor.setSelections(selCtx.map(function(ctx) {
+				return {
+					start: ctx.finalCaret,
+					end: ctx.finalCaret
+				};
+			}));
+		}
+	}
+
+
 	function updateCarets(selCtx, fromIndex, delta) {
 		for (var i = fromIndex + 1, il = selCtx.length; i < il; i++) {
 			selCtx[i].caret += delta;
@@ -115,27 +151,27 @@ define(function(require, exports, module) {
 				editor: editor.editor,
 				update: function(abbr) {
 					var result, replaced;
-					resetCarets(selCtx);
 					for (var i = selCtx.length - 1, ctx; i >= 0; i--) {
 						ctx = selCtx[i];
 						result = '';
 						try {
-							result = parser.expand(abbr, ctx);
+							if (abbr) {
+								result = parser.expand(abbr, ctx);
+							} else {
+								result = ctx.pastedContent;
+							}
 						} catch (e) {
 							console.error(e);
 						}
 
 						editor.selectionIndex = i;
 						replaced = editor.replaceContent(result, ctx.selection.start, ctx.selection.end);
-						ctx.caret = editor.getCaretPos();
-						updateCarets(selCtx, i, replaced.length - ctx.selection.length());
+						ctx.finalCaret = getCaret(editor.editor);
+						updateFinalCarets(selCtx, i, lineDelta(ctx.pastedContent, replaced));
 					}
 				},
 				confirm: function() {
-					restore(editor, selCtx);
-				},
-				cancel: function() {
-					restore(editor, selCtx);
+					setFinalCarets(selCtx, editor.editor);
 				}
 			});
 		},

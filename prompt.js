@@ -29,13 +29,38 @@ define(function(require, exports, module) {
 		return noop;
 	}
 
+	function preparePanel($panel, delegate) {
+		var label = $panel.find('.emmet-prompt__label');
+		label.text(delegate.label || label.data('default'));
+
+		var input = $panel.find('.emmet-prompt__input');
+		if (delegate.placeholder) {
+			input.val(delegate.placeholder);
+		}
+
+		if (!EditorManager.getFocusedEditor()) {
+			EditorManager.focusEditor();
+		}
+
+		return {
+			label: label,
+			input: input
+		};
+	}
+
 	AppInit.appReady(function() {
 		panel = PanelManager.createBottomPanel('io.emmet.interactive-prompt', $panel);
 
 		// register keyboard handlers
 		$panel.find('.emmet-prompt__input')
 			.on('keyup', function(evt) {
-				if (evt.keyCode === KeyEvent.DOM_VK_ENTER) {
+				if (evt.keyCode === KeyEvent.DOM_VK_TAB) {
+					// do not accidentally loose focus from input panel
+					evt.stopPropagation();
+					return evt.preventDefault();
+				}
+
+				if (evt.keyCode === KeyEvent.DOM_VK_RETURN || evt.keyCode === KeyEvent.DOM_VK_ENTER) {
 					$panel.triggerHandler('confirm.emmet', [this.value]);
 					hidePanel();
 					return evt.preventDefault();
@@ -65,29 +90,22 @@ define(function(require, exports, module) {
 			delegate = delegate || {};
 
 			this.hide();
-
-			var label = $panel.find('.emmet-prompt__label');
-			label.text(delegate.label || label.data('default'));
-
-			var input = $panel.find('.emmet-prompt__input');
-			if (delegate.placeholder) {
-				input.val(delegate.placeholder);
-			}
-
+			var panelElems = preparePanel($panel, delegate);
 			var update = method(delegate, 'update');
 			var updated = false;
-			if (!EditorManager.getFocusedEditor()) {
-				EditorManager.focusEditor();
-			}
+			var undo = function() {
+				if (updated) {
+					delegate.editor.undo();
+				}
+			};
 			
 			panel.show();
-
 			$panel
 				.on('update.emmet', function(evt, value) {
+					undo();
 					updated = true;
-					delegate.editor.undo();
 					delegate.editor.document.batchOperation(function() {
-						update(value);
+						updated = (update(value) !== false);
 					});
 				})
 				.on('confirm.emmet', function(evt, value) {
@@ -95,20 +113,17 @@ define(function(require, exports, module) {
 					delegate.editor.focus();
 				})
 				.on('cancel.emmet', function(evt) {
-					if (updated) {
-						delegate.editor.undo();
-					}
+					undo();
 					method(delegate, 'cancel')();
 					delegate.editor.focus();
 				});
 
-			input.focus();
-
+			panelElems.input.focus();
 			method(delegate, 'show')();
-
-			if (input.val()) {
-				update(input.val());
-				updated = true;
+			if (panelElems.input.val()) {
+				var defaultValue = panelElems.input.val();
+				panelElems.input[0].setSelectionRange(0, defaultValue.length);
+				$panel.triggerHandler('update.emmet', [defaultValue]);
 			}
 		},
 

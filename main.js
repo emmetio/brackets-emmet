@@ -72,11 +72,9 @@ define(function(require, exports, module) {
 
 			editor.setup(bracketsEditor);
 			bracketsEditor.document.batchOperation(function() {
-				var selections = editor.selectionList();
-				for (var i = 0, il = selections.length; i < il; i++) {
-					editor.selectionIndex = i;
+				editor.exec(function() {
 					runAction(action, df);
-				}
+				});
 			});
 			return df.resolve().promise();
 		};
@@ -165,6 +163,8 @@ define(function(require, exports, module) {
 	 * Register special, interactive versions of some Emmet actions
 	 */
 	function registerInteractiveCommands(menu) {
+		actions.add('interactive_expand_abbreviation', function() {}, 'Expand Abbreviation (interactive)');
+		
 		['wrap_with_abbreviation', 'update_tag', 'interactive_expand_abbreviation'].forEach(function(cmd) {
 			var action = actions.get(cmd);
 			CommandManager.register(actionLabel(action, cmd), 'io.emmet.' + cmd, function() {
@@ -173,7 +173,6 @@ define(function(require, exports, module) {
 			});
 		});
 
-		menu.addMenuItem('io.emmet.interactive_expand_abbreviation', 'Alt-Enter');
 	}
 
 	function actionLabel(action, fallback) {

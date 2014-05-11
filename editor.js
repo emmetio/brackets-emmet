@@ -1,7 +1,7 @@
 /**
  * Emmet Editor interface implementation for Brackets.
  * Interface is optimized for multiple cursor usage: authors
- * should run acttion multiple times and update `selectionIndex`
+ * should run acttion multiple times and update `_selection.index`
  * property on each iteration.
  */
 define(function(require, exports, module) {
@@ -20,7 +20,7 @@ define(function(require, exports, module) {
 	 * @param  {Editor} editor Brackets editor instance
 	 * @return {String}
 	 */
-	function normalize(text, editor) {
+	function normalize(text) {
 		var indentation = '\t';
 		if (!Editor.getUseTabChar()) {
 			indentation = '';
@@ -34,6 +34,13 @@ define(function(require, exports, module) {
 			indentation: indentation,
 			newline: '\n'
 		});
+	}
+
+	function visualize(str) {
+		return str
+			.replace(/\t/g, '\\t')
+			.replace(/\n/g, '\\n')
+			.replace(/\s/g, '\\s');
 	}
 
 	return {
@@ -69,20 +76,21 @@ define(function(require, exports, module) {
 		 * Executes given function for every selection
 		 * @param  {Function} fn
 		 */
-		exec: function(fn) {
+		exec: function(fn, skipSelSet) {
 			var sel = this._selection;
 			var ix = sel.bufferRanges.length - 1;
 			var success = true;
-			sel.saved = new Array(sel.bufferRanges.length);
+			sel.saved = [];
 			while (ix >= 0) {
 				sel.index = ix;
-				if (fn(sel.index) === false) {
+				if (fn(ix, sel.indexRanges[ix], sel.bufferRanges[ix]) === false) {
 					success = false;
 					break;
 				}
+				ix--;
 			}
 
-			if (success && sel.saved.length > 1) {
+			if (!skipSelSet && success && sel.saved.length > 1) {
 				this.editor.setSelections(sel.saved);
 			}
 		},
@@ -146,12 +154,17 @@ define(function(require, exports, module) {
 		createSelection: function(start, end) {
 			end = end || start;
 
-			var sels = this._selection.bufferRanges;
-			sels[this._selection.index] = {
-				start: this._posFromIndex(start), 
-				end: this._posFromIndex(end)
-			};
-			this.editor.setSelections(sels);
+			this.editor.setSelection(
+				this._posFromIndex(start), 
+				this._posFromIndex(end)
+			);
+
+			// var sels = this._selection.bufferRanges;
+			// sels[this._selection.index] = {
+			// 	start: this._posFromIndex(start), 
+			// 	end: this._posFromIndex(end)
+			// };
+			// this.editor.setSelections(sels);
 		},
 
 		/**
@@ -188,10 +201,13 @@ define(function(require, exports, module) {
 			if (typeof start == 'undefined') {
 				start = 0;
 			}
+
+			value = normalize(value);
 			
 			// indent new value
 			if (!noIndent) {
-				value = utils.padString(value, utils.getLinePaddingFromPosition(this.getContent(), start));
+				var pad = utils.getLinePaddingFromPosition(this.getContent(), start);
+				value = utils.padString(value, pad);
 			}
 			
 			// find new caret position
@@ -219,7 +235,7 @@ define(function(require, exports, module) {
 		},
 
 		getSyntax: function() {
-			var sel = this.editor.getSelections()[this.selectionIndex];
+			var sel = this.editor.getSelections()[this._selection.index];
 			var mode = this.editor.getModeForRange(sel.start, sel.end).name;
 			return this.modeMap[mode] || mode;
 		},

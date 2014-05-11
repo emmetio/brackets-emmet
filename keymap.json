@@ -27,5 +27,6 @@
     "select_previous_item": "Shift-Ctrl-,",
     "reflect_css_value": "Shift-Ctrl-Alt-R",
     
-    "insert_formatted_line_break": "Enter"
+    "insert_formatted_line_break": "Enter",
+    "interactive_expand_abbreviation": "Ctrl-Shift-Alt-Enter"
 }

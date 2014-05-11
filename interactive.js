@@ -23,10 +23,9 @@ define(function(require, exports, module) {
 	 */
 	function selectionContext(editor, info) {
 		info = info || editorUtils.outputInfo(editor);
-		return editor.selectionList().map(function(sel, i) {
-			editor.selectionIndex = i;
-			
-			var r = range(editor.getSelectionRange());
+		var result = [];
+		editor.exec(function(i, sel) {
+			var r = range(sel);
 			var tag = htmlMatcher.tag(info.content, r.start);
 			if (!r.length() && tag) {
 				// no selection, use tag pair
@@ -39,16 +38,19 @@ define(function(require, exports, module) {
 				caret: r.start,
 				syntax: info.syntax,
 				profile: info.profile || null,
-				counter: editor.selectionIndex + 1,
+				counter: i + 1,
 				contextNode: actionUtils.captureContext(editor, r.start)
 			};
 
 			if (r.length()) {
-				out.pastedContent = utils.escapeText(r.substring(info.content));
+				var pasted = utils.escapeText(r.substring(info.content));
+				out.pastedContent = editorUtils.unindent(editor, pasted);
 			}
 
-			return out;
-		});
+			result[i] = out;
+		}, true);
+
+		return result;
 	}
 
 	function updateFinalCarets(selCtx, fromIndex, delta) {
@@ -63,7 +65,7 @@ define(function(require, exports, module) {
 
 	/**
 	 * Returns current caret position for given editor
-	 * @param  {Editor} editor Atom editor instance
+	 * @param  {Editor} editor Brackets editor instance
 	 * @return {Point}        Character position in editor
 	 */
 	function getCaret(editor) {
@@ -86,28 +88,6 @@ define(function(require, exports, module) {
 		}
 	}
 
-
-	function updateCarets(selCtx, fromIndex, delta) {
-		for (var i = fromIndex + 1, il = selCtx.length; i < il; i++) {
-			selCtx[i].caret += delta;
-		}
-	}
-
-	function resetCarets(selCtx) {
-		selCtx.forEach(function(ctx) {
-			ctx.caret = ctx.selection.start;
-		});
-	}
-
-	function restore(editor, selCtx) {
-		if (selCtx) {
-			for (var i = selCtx.length - 1; i >= 0; i--) {
-				editor.selectionIndex = i;
-				editor.setCaretPos(selCtx[i].caret);
-			}
-		}
-	}
-
 	return {
 		run: function(cmd, editor) {
 			if (cmd === 'wrap_with_abbreviation') {
@@ -125,15 +105,15 @@ define(function(require, exports, module) {
 
 		expandAbbreviation: function(editor) {
 			var info = editorUtils.outputInfo(editor);
-			var selCtx = editor.selectionList().map(function(sel, i) {
-				editor.selectionIndex = i;
-				var r = range(editor.getSelectionRange());
-				return {
+			var selCtx = [];
+			editor.exec(function(i, sel) {
+				var r = range(sel);
+				selCtx[i] = {
 					selection: r,
 					caret: r.start,
 					syntax: info.syntax,
 					profile: info.profile || null,
-					counter: editor.selectionIndex + 1,
+					counter: i + 1,
 					contextNode: actionUtils.captureContext(editor, r.start)
 				};
 			});
@@ -162,9 +142,10 @@ define(function(require, exports, module) {
 							}
 						} catch (e) {
 							console.error(e);
+							result = ctx.pastedContent;
 						}
 
-						editor.selectionIndex = i;
+						editor._selection.index = i;
 						replaced = editor.replaceContent(result, ctx.selection.start, ctx.selection.end);
 						ctx.finalCaret = getCaret(editor.editor);
 						updateFinalCarets(selCtx, i, lineDelta(ctx.pastedContent, replaced));
@@ -186,18 +167,21 @@ define(function(require, exports, module) {
 				label: 'Enter Abbreviation',
 				editor: editor.editor,
 				update: function(abbr) {
-					resetCarets(selCtx);
-					var tag, replaced, delta;
+					abbr = abbr.trim();
+					var tag, replaced;
+					var didUpdate = false;
 					for (var i = selCtx.length - 1, ctx; i >= 0; i--) {
 						ctx = selCtx[i];
 						tag = null;
 
-						try {
-							tag = updateTag.getUpdatedTag(abbr, {match: ctx.tag}, info.content, {
-								counter: ctx.counter
-							});
-						} catch (e) {
-							console.error(e);
+						if (abbr) {
+							try {
+								tag = updateTag.getUpdatedTag(abbr, {match: ctx.tag}, info.content, {
+									counter: ctx.counter
+								});
+							} catch (e) {
+								console.error(e);
+							}
 						}
 
 						if (!tag) {
@@ -218,22 +202,17 @@ define(function(require, exports, module) {
 							});
 						}
 
-						delta = 0;
-						editor.selectionIndex = i;
 						replaced.forEach(function(data) {
+							didUpdate = true;
 							editor.replaceContent(data.content, data.start, data.end);
-							ctx.caret = data.start;
-							delta += data.content.length - data.end + data.start;
+							ctx.finalCaret = editor._posFromIndex(data.start);
 						});
-
-						updateCarets(selCtx, i, delta);
 					}
+
+					return didUpdate;
 				},
 				confirm: function() {
-					restore(editor, selCtx);
-				},
-				cancel: function() {
-					restore(editor, selCtx);
+					setFinalCarets(selCtx, editor.editor);
 				}
 			});
 		}

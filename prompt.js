@@ -93,8 +93,10 @@ define(function(require, exports, module) {
 			var panelElems = preparePanel($panel, delegate);
 			var update = method(delegate, 'update');
 			var updated = false;
+			var cm = delegate.editor._codeMirror;
+			var undoToken = cm.changeGeneration();
 			var undo = function() {
-				if (updated) {
+				if (updated && undoToken < cm.changeGeneration()) {
 					delegate.editor.undo();
 				}
 			};

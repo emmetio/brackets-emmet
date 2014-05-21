@@ -235,7 +235,7 @@ define(function(require, exports, module) {
 		},
 
 		getSyntax: function() {
-			var sel = this.editor.getSelections()[this._selection.index];
+			var sel = this.getSelectionBufferRange();
 			var mode = this.editor.getModeForRange(sel.start, sel.end).name;
 			return this.modeMap[mode] || mode;
 		},

@@ -55,7 +55,7 @@ define(function(require, exports, module) {
 			'text/x-sass': 'sass'
 		},
 
-		setup: function(editor, selIndex) {
+		setup: function(editor, singleSelectionMode) {
 			this.editor = editor;
 			var bufRanges = editor.getSelections();
 			this._selection = {
@@ -67,9 +67,13 @@ define(function(require, exports, module) {
 						start: editor.indexFromPos(r.start),
 						end:   editor.indexFromPos(r.end)
 					};
-				})
-
+				}),
+				batch: []
 			};
+
+			if (singleSelectionMode) {
+				this._selection.index = bufRanges.length - 1;
+			}
 		},
 
 		/**
@@ -154,10 +158,11 @@ define(function(require, exports, module) {
 		createSelection: function(start, end) {
 			end = end || start;
 
-			this.editor.setSelection(
-				this._posFromIndex(start), 
-				this._posFromIndex(end)
-			);
+
+			start = this._posFromIndex(start);
+			end = this._posFromIndex(end);
+			this.editor.setSelection(start, end);
+			this._selection.batch.unshift({start: start, end: end});
 
 			// var sels = this._selection.bufferRanges;
 			// sels[this._selection.index] = {
@@ -165,6 +170,12 @@ define(function(require, exports, module) {
 			// 	end: this._posFromIndex(end)
 			// };
 			// this.editor.setSelections(sels);
+		},
+
+		applyBatchedSelections: function() {
+			if (this._selection.batch.length) {
+				this.editor.setSelections(this._selection.batch);
+			}
 		},
 
 		/**

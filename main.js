@@ -75,6 +75,7 @@ define(function(require, exports, module) {
 				editor.exec(function() {
 					runAction(action, df);
 				});
+				editor.applyBatchedSelections();
 			});
 			return df.resolve().promise();
 		};

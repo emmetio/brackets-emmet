@@ -1,0 +1,1 @@
+zip -r brackets.zip . -x \*.git\*

@@ -119,7 +119,13 @@ define(function(require, exports, module) {
 	function loadExtensions(callback) {
 		var extPath = preferences.getPreference('extPath');
 		if (extPath) {
-			var dir = FileSystem.getDirectoryForPath(extPath);
+			var dir;
+			try {
+				dir = FileSystem.getDirectoryForPath(extPath);
+			} catch (e) {
+				console.error('Error while loading extensions:', e);
+				callback();
+			}
 			dir.exists(function(err, exists) {
 				if (exists) {
 					emmet.resetUserData();

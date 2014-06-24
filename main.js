@@ -104,9 +104,13 @@ define(function(require, exports, module) {
 			}
 		}
 
-		if (action == 'insert_formatted_line_break' && lineBreakSyntaxes.indexOf(editor.getSyntax()) === -1) {
-			// handle Enter key for limited syntaxes only
-			return df.reject();
+		if (action == 'insert_formatted_line_break') {
+			var activeEditor = editor.editor;
+			var allowAction = !activeEditor.hasSelection() && ~lineBreakSyntaxes.indexOf(editor.getSyntax());
+			if (!allowAction) {
+				// handle Enter key for limited syntaxes only
+				return df.reject();
+			}
 		}
 
 		return emmet.run(action, editor);

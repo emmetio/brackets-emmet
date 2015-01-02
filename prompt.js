@@ -5,11 +5,11 @@
 define(function(require, exports, module) {
 	var panelHtml = require('text!ui/panel.html');
 
-	var PanelManager   = brackets.getModule('view/PanelManager');
-	var ExtensionUtils = brackets.getModule('utils/ExtensionUtils');
-	var AppInit        = brackets.getModule('utils/AppInit');
-	var KeyEvent       = brackets.getModule('utils/KeyEvent');
-	var EditorManager  = brackets.getModule('editor/EditorManager');
+	var WorkspaceManager = brackets.getModule('view/WorkspaceManager');
+	var ExtensionUtils   = brackets.getModule('utils/ExtensionUtils');
+	var AppInit          = brackets.getModule('utils/AppInit');
+	var KeyEvent         = brackets.getModule('utils/KeyEvent');
+	var EditorManager    = brackets.getModule('editor/EditorManager');
 
 	var $panel = $(panelHtml);
 	var panel = null;
@@ -49,7 +49,7 @@ define(function(require, exports, module) {
 	}
 
 	AppInit.appReady(function() {
-		panel = PanelManager.createBottomPanel('io.emmet.interactive-prompt', $panel);
+		panel = WorkspaceManager.createBottomPanel('io.emmet.interactive-prompt', $panel);
 
 		// register keyboard handlers
 		$panel.find('.emmet-prompt__input')
@@ -100,7 +100,7 @@ define(function(require, exports, module) {
 					delegate.editor.undo();
 				}
 			};
-			
+
 			panel.show();
 			$panel
 				.on('update.emmet', function(evt, value) {

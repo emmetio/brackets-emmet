@@ -150,7 +150,7 @@ define(function(require, exports, module) {
 						files = files.map(function(file) {
 							if (path.basename(file.fullPath) == 'keymap.json') {
 								waitForKeymap = true;
-								file.read({encoding: 'utf8'}, function(content) {
+								file.read({encoding: 'utf8'}, function(err, content) {
 									keymap = content;
 									complete();
 								});

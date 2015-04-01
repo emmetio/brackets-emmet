@@ -1,7 +1,7 @@
 {
   "name": "brackets-emmet",
   "title": "Emmet",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "High-speed HTML and CSS workflow",
   "homepage": "http://emmet.io",
   "author": "Sergey Chikuyonok <serge.che@gmail.com> (https://github.com/sergeche)",
@@ -17,6 +17,6 @@
     "brackets": ">=0.44.0"
   },
   "dependencies": {
-    "emmet": "^1.2.1"
+    "emmet": "^1.3.0"
   }
 }

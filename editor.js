@@ -52,7 +52,9 @@ define(function(require, exports, module) {
 			'text/css': 'css',
 			'text/x-less': 'less',
 			'text/x-scss': 'scss',
-			'text/x-sass': 'sass'
+			'text/x-sass': 'sass',
+			'javascript': 'jsx',
+			'text/javascript': 'jsx'
 		},
 
 		setup: function(editor, singleSelectionMode) {

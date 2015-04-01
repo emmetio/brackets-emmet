@@ -242,7 +242,7 @@ define(function(require, exports, module) {
 		var cmdEnable = CommandManager.register('Enable Emmet', 'io.emmet.enabled', function() {
 			this.setChecked(!this.getChecked());
 		});
-		$(cmdEnable).on('checkedStateChange', function() {
+		cmdEnable.on('checkedStateChange', function() {
 			isEnabled = cmdEnable.getChecked();
 		});
 		menu.addMenuItem(cmdEnable);

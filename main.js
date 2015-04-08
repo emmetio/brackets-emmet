@@ -91,7 +91,9 @@ define(function(require, exports, module) {
 		if (action == 'expand_abbreviation_with_tab') {
 			var syntax = editor.getSyntax();
 			var activeEditor = editor.editor;
-			if (!preferences.getPreference('tab') || !resources.hasSyntax(syntax)) {
+			// do not allow tab expander in JS/JSX since it breakes native
+			// snippets and indentation. Hardcode this exception for now
+			if (syntax === 'jsx' || !preferences.getPreference('tab') || !resources.hasSyntax(syntax)) {
 				return df.reject();
 			}
 

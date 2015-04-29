@@ -19,6 +19,7 @@ define(function(require, exports, module) {
 	var EditorManager     = brackets.getModule('editor/EditorManager');
 	var Dialogs           = brackets.getModule('widgets/Dialogs');
 	var FileSystem        = brackets.getModule('filesystem/FileSystem');
+	var FileUtils         = brackets.getModule('file/FileUtils');
 	var ExtensionUtils    = brackets.getModule('utils/ExtensionUtils');
 	var AppInit           = brackets.getModule('utils/AppInit');
 
@@ -120,6 +121,7 @@ define(function(require, exports, module) {
 
 	function loadExtensions(callback) {
 		var extPath = preferences.getPreference('extPath');
+		extPath = FileUtils.convertWindowsPathToUnixPath(extPath);
 		if (extPath) {
 			var dir;
 			try {

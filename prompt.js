@@ -14,9 +14,12 @@ define(function(require, exports, module) {
 	var $panel = $(panelHtml);
 	var panel = null;
 
+    var isKeyEnterDown = false;
+
 	function hidePanel() {
 		$panel.off('.emmet');
 		panel.hide();
+        isKeyEnterDown = false;
 	}
 
 	function noop() {}
@@ -50,8 +53,6 @@ define(function(require, exports, module) {
 
 	AppInit.appReady(function() {
 		panel = WorkspaceManager.createBottomPanel('io.emmet.interactive-prompt', $panel);
-
-        var isKeyEnterDown = false;
 
 		// register keyboard handlers
 		$panel.find('.emmet-prompt__input')

@@ -8,7 +8,7 @@ Emmet is a web-developer’s toolkit that can greatly improve your HTML & CSS wo
 2. Select _File > Extension Manager..._
 3. Find “Emmet” extension and click “Install” button
 
-### Manual instalation
+### Manual installation
 
 1. Clone this repo into `~/Library/Application Support/Brackets/extensions/user/`.
 2. In Terminal, go to cloned repo: `cd ~/Library/Application Support/Brackets/extensions/user/brackets-emmet`.

@@ -210,7 +210,7 @@ define(function(require, exports, module) {
 		emmet.loadSystemSnippets(snippets);
 		emmet.loadCIU(ciu);
 
-		var menu = Menus.addMenu('Emmet', 'io.emmet.EmmetMainMenu');
+		var menu = Menus.addMenu('Emmet', 'io.emmet.EmmetMainMenu', Menus.BEFORE, Menus.AppMenuBar.HELP_MENU);
 		registerInteractiveCommands(menu);
 
 		// register all commands

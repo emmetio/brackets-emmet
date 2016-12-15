@@ -14,9 +14,12 @@ define(function(require, exports, module) {
 	var $panel = $(panelHtml);
 	var panel = null;
 
+    var isKeyEnterDown = false;
+
 	function hidePanel() {
 		$panel.off('.emmet');
 		panel.hide();
+        isKeyEnterDown = false;
 	}
 
 	function noop() {}
@@ -61,8 +64,10 @@ define(function(require, exports, module) {
 				}
 
 				if (evt.keyCode === KeyEvent.DOM_VK_RETURN || evt.keyCode === KeyEvent.DOM_VK_ENTER) {
-					$panel.triggerHandler('confirm.emmet', [this.value]);
-					hidePanel();
+					if (isKeyEnterDown) {
+                        $panel.triggerHandler('confirm.emmet', [this.value]);
+                        hidePanel();
+                    }
 					return evt.preventDefault();
 				}
 
@@ -72,6 +77,11 @@ define(function(require, exports, module) {
 					return evt.preventDefault();
 				}
 			})
+            .on('keydown', function(evt) {
+                if (evt.keyCode === KeyEvent.DOM_VK_RETURN || evt.keyCode === KeyEvent.DOM_VK_ENTER) {
+					isKeyEnterDown = true;
+				}
+            })
 			.on('blur cancel', function() {
 				setTimeout(function() {
 					if (panel.isVisible()) {

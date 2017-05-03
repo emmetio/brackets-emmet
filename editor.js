@@ -53,6 +53,7 @@ define(function(require, exports, module) {
 			'text/x-less': 'less',
 			'text/x-scss': 'scss',
 			'text/x-sass': 'sass',
+			'text/x-styl': 'stylus',
 			'javascript': 'jsx',
 			'text/javascript': 'jsx'
 		},

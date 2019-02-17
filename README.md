@@ -27,4 +27,4 @@ To redefine them, simply update `keymap.json` action values with new keybindings
 
 ## [Extensions support](http://docs.emmet.io/customization/)
 
-Emmet for Brackets supports extensions: you should open `Emmet > Preferences…` dialog and enter absolute path to extentions folder. Unfortunately, Brackets doesn’t support folder picking dialog so you have to type it manually.
+Emmet for Brackets supports extensions: you should open `Emmet > Preferences…` dialog and enter absolute path to extensions folder. Unfortunately, Brackets doesn’t support folder picking dialog so you have to type it manually.
